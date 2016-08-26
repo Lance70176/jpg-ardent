@@ -955,16 +955,35 @@ abstract class Ardent extends Model {
     {
         return static::executeQuery('replace', $attributes);
     }
-    /**
-     * performs an 'insert ignore' query with the data
-     * @param  array  $attributes
-     * @return bool   t/f for success/failure
-     */
-    public static function insertIgnore(array $attributes = [])
+    
+    public function insertIgnore(array $attributes)
     {
-        return static::executeQuery('insert ignore', $attributes);
+        $this->fill($attributes);
+    
+        if ($this->usesTimestamps()) {
+            $this->updateTimestamps();
+        }
+    
+        $attributes = $this->getAttributes();
+    
+        $query = $this->newBaseQueryBuilder();
+        $processor = $query->getProcessor();
+        $grammar = $query->getGrammar();
+    
+        $table = $grammar->wrapTable($this->getTable());
+        $keyName = $this->getKeyName();
+        $columns = $grammar->columnize(array_keys($attributes));
+        $values = $grammar->parameterize($attributes);
+    
+        $sql = "insert ignore into {$table} ({$columns}) values ({$values})";
+    
+        $id = $processor->processInsertGetId($query, $sql, array_values($attributes));
+    
+        $this->setAttribute($keyName, $id);
+    
+        return $this;
     }
-
+    
     protected static function executeQuery($command, array $attributes)
     {
         if(!count($attributes)) {
