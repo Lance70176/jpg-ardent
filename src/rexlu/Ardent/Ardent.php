@@ -1,9 +1,10 @@
-<?php namespace LaravelBook\Ardent;
+<?php
+namespace rexlu\Ardent;
 
 /*
  * This file is part of the Ardent package.
  *
- * (c) Max Ehsan <contact@laravelbook.com>
+ * (c) Max Ehsan <lance70176@gmail.com.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -52,7 +53,7 @@ abstract class Ardent extends Model {
      */
     public static $customAttributes = array();
 
-	/**
+    /**
      * The validator object in case you need it externally (say, for a form builder).
      *
      * @see getValidator()
@@ -222,7 +223,7 @@ abstract class Ardent extends Model {
      * Create a new Ardent model instance.
      *
      * @param array $attributes
-     * @return \LaravelBook\Ardent\Ardent
+     * @return \rexlu\Ardent\Ardent
      */
     public function __construct(array $attributes = array()) {
         parent::__construct($attributes);
@@ -256,32 +257,32 @@ abstract class Ardent extends Model {
         }
     }
 
-	public function getObservableEvents() {
-		return array_merge(
-			parent::getObservableEvents(),
-			array('validating', 'validated')
-		);
-	}
+    public function getObservableEvents() {
+        return array_merge(
+            parent::getObservableEvents(),
+            array('validating', 'validated')
+        );
+    }
 
-	/**
-	 * Register a validating model event with the dispatcher.
-	 *
-	 * @param Closure|string $callback
-	 * @return void
-	 */
-	public static function validating($callback) {
-		static::registerModelEvent('validating', $callback);
-	}
+    /**
+     * Register a validating model event with the dispatcher.
+     *
+     * @param Closure|string $callback
+     * @return void
+     */
+    public static function validating($callback) {
+        static::registerModelEvent('validating', $callback);
+    }
 
-	/**
-	 * Register a validated model event with the dispatcher.
-	 *
-	 * @param Closure|string $callback
-	 * @return void
-	 */
-	public static function validated($callback) {
-		static::registerModelEvent('validated', $callback);
-	}
+    /**
+     * Register a validated model event with the dispatcher.
+     *
+     * @param Closure|string $callback
+     * @return void
+     */
+    public static function validated($callback) {
+        static::registerModelEvent('validated', $callback);
+    }
 
     /**
      * Looks for the relation in the {@link $relationsData} array and does the correct magic as Eloquent would require
@@ -394,74 +395,74 @@ abstract class Ardent extends Model {
     }
 
 
-	/**
-	 * Define an inverse one-to-one or many relationship.
-	 * Overriden from {@link Eloquent\Model} to allow the usage of the intermediary methods to handle the {@link
-	 * $relationsData} array.
-	 *
-	 * @param  string  $related
-	 * @param  string  $foreignKey
-	 * @param  string  $otherKey
-	 * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-	 */
-	public function belongsTo($related, $foreignKey = NULL, $otherKey = NULL, $relation = NULL) {
+    /**
+     * Define an inverse one-to-one or many relationship.
+     * Overriden from {@link Eloquent\Model} to allow the usage of the intermediary methods to handle the {@link
+     * $relationsData} array.
+     *
+     * @param  string  $related
+     * @param  string  $foreignKey
+     * @param  string  $otherKey
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function belongsTo($related, $foreignKey = NULL, $otherKey = NULL, $relation = NULL) {
 
-		// If no foreign key was supplied, we can use a backtrace to guess the proper
-		// foreign key name by using the name of the relationship function, which
-		// when combined with an "_id" should conventionally match the columns.
-		if (is_null($relation)) {
-			$backtrace = debug_backtrace(false);
-			$caller = ($backtrace[1]['function'] == 'handleRelationalArray')? $backtrace[3] : $backtrace[1];
-			$relation = $caller['function'];
-		}
+        // If no foreign key was supplied, we can use a backtrace to guess the proper
+        // foreign key name by using the name of the relationship function, which
+        // when combined with an "_id" should conventionally match the columns.
+        if (is_null($relation)) {
+            $backtrace = debug_backtrace(false);
+            $caller = ($backtrace[1]['function'] == 'handleRelationalArray')? $backtrace[3] : $backtrace[1];
+            $relation = $caller['function'];
+        }
 
-		if (is_null($foreignKey)) {
-			$foreignKey = snake_case($relation).'_id';
-		}
+        if (is_null($foreignKey)) {
+            $foreignKey = snake_case($relation).'_id';
+        }
 
-		// Once we have the foreign key names, we'll just create a new Eloquent query
-		// for the related models and returns the relationship instance which will
-		// actually be responsible for retrieving and hydrating every relations.
-		$instance = new $related;
-		
-		$otherKey = $otherKey ?: $instance->getKeyName();
-		
-		$query = $instance->newQuery();
+        // Once we have the foreign key names, we'll just create a new Eloquent query
+        // for the related models and returns the relationship instance which will
+        // actually be responsible for retrieving and hydrating every relations.
+        $instance = new $related;
 
-		return new BelongsTo($query, $this, $foreignKey, $otherKey, $relation);
-	}
+        $otherKey = $otherKey ?: $instance->getKeyName();
 
-	/**
-	 * Define an polymorphic, inverse one-to-one or many relationship.
-	 * Overriden from {@link Eloquent\Model} to allow the usage of the intermediary methods to handle the {@link
-	 * $relationsData} array.
-	 *
-	 * @param  string  $name
-	 * @param  string  $type
-	 * @param  string  $id
-	 * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-	 */
-	public function morphTo($name = null, $type = null, $id = null) {
-		// If no name is provided, we will use the backtrace to get the function name
-		// since that is most likely the name of the polymorphic interface. We can
-		// use that to get both the class and foreign key that will be utilized.
-		if (is_null($name))
-		{
-			$backtrace = debug_backtrace(false);
-			$caller = ($backtrace[1]['function'] == 'handleRelationalArray')? $backtrace[3] : $backtrace[1];
+        $query = $instance->newQuery();
 
-			$name = snake_case($caller['function']);
-		}
+        return new BelongsTo($query, $this, $foreignKey, $otherKey, $relation);
+    }
 
-		// Next we will guess the type and ID if necessary. The type and IDs may also
-		// be passed into the function so that the developers may manually specify
-		// them on the relations. Otherwise, we will just make a great estimate.
-		list($type, $id) = $this->getMorphs($name, $type, $id);
+    /**
+     * Define an polymorphic, inverse one-to-one or many relationship.
+     * Overriden from {@link Eloquent\Model} to allow the usage of the intermediary methods to handle the {@link
+     * $relationsData} array.
+     *
+     * @param  string  $name
+     * @param  string  $type
+     * @param  string  $id
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function morphTo($name = null, $type = null, $id = null) {
+        // If no name is provided, we will use the backtrace to get the function name
+        // since that is most likely the name of the polymorphic interface. We can
+        // use that to get both the class and foreign key that will be utilized.
+        if (is_null($name))
+        {
+            $backtrace = debug_backtrace(false);
+            $caller = ($backtrace[1]['function'] == 'handleRelationalArray')? $backtrace[3] : $backtrace[1];
 
-		$class = $this->$type;
+            $name = snake_case($caller['function']);
+        }
 
-		return $this->belongsTo($class, $id);
-	}
+        // Next we will guess the type and ID if necessary. The type and IDs may also
+        // be passed into the function so that the developers may manually specify
+        // them on the relations. Otherwise, we will just make a great estimate.
+        list($type, $id) = $this->getMorphs($name, $type, $id);
+
+        $class = $this->$type;
+
+        return $this->belongsTo($class, $id);
+    }
 
     /**
      * Get an attribute from the model.
@@ -499,7 +500,7 @@ abstract class Ardent extends Model {
 
         // Make this Capsule instance available globally via static methods
         $db->setAsGlobal();
-        
+
         $db->bootEloquent();
 
         $translator = new Translator($lang);
@@ -561,40 +562,40 @@ abstract class Ardent extends Model {
         if (empty($rules)) {
             $success = true;
         } else {
-			$customMessages = (empty($customMessages))? static::$customMessages : $customMessages;
-			$customAttributes = (empty($customAttributes))? static::$customAttributes : $customAttributes;
+            $customMessages = (empty($customMessages))? static::$customMessages : $customMessages;
+            $customAttributes = (empty($customAttributes))? static::$customAttributes : $customAttributes;
 
-			if ($this->forceEntityHydrationFromInput || (empty($this->attributes) && $this->autoHydrateEntityFromInput)) {
-				$this->fill(Input::all());
-			}
+            if ($this->forceEntityHydrationFromInput || (empty($this->attributes) && $this->autoHydrateEntityFromInput)) {
+                $this->fill(Input::all());
+            }
 
-			$data = $this->getAttributes(); // the data under validation
+            $data = $this->getAttributes(); // the data under validation
 
-			// perform validation
-			$this->validator = static::makeValidator($data, $rules, $customMessages, $customAttributes);
-			$success   = $this->validator->passes();
+            // perform validation
+            $this->validator = static::makeValidator($data, $rules, $customMessages, $customAttributes);
+            $success   = $this->validator->passes();
 
-			if ($success) {
-				// if the model is valid, unset old errors
-				if ($this->validationErrors === null || $this->validationErrors->count() > 0) {
-					$this->validationErrors = new MessageBag;
-				}
-			} else {
-				// otherwise set the new ones
-				$this->validationErrors = $this->validator->messages();
+            if ($success) {
+                // if the model is valid, unset old errors
+                if ($this->validationErrors === null || $this->validationErrors->count() > 0) {
+                    $this->validationErrors = new MessageBag;
+                }
+            } else {
+                // otherwise set the new ones
+                $this->validationErrors = $this->validator->messages();
 
-				// stash the input to the current session
-				if (!self::$externalValidator && Input::hasSession()) {
-					Input::flash();
-				}
-			}
-		}
+                // stash the input to the current session
+                if (!self::$externalValidator && Input::hasSession()) {
+                    Input::flash();
+                }
+            }
+        }
 
         $this->fireModelEvent('validated', false);
 
-	    if (!$success && $this->throwOnValidation) {
-		    throw new InvalidModelException($this);
-	    }
+        if (!$success && $this->throwOnValidation) {
+            throw new InvalidModelException($this);
+        }
 
         return $success;
     }
@@ -608,7 +609,7 @@ abstract class Ardent extends Model {
      * @param Closure $beforeSave
      * @param Closure $afterSave
      * @param bool    $force          Forces saving invalid data.
-     * 
+     *
      * @return bool
      * @see Ardent::save()
      * @see Ardent::forceSave()
@@ -815,7 +816,7 @@ abstract class Ardent extends Model {
      * @return array Rules with exclusions applied
      */
     protected function buildUniqueExclusionRules(array $rules = array()) {
-      
+
         if (!count($rules))
           $rules = static::$rules;
 
@@ -826,17 +827,17 @@ abstract class Ardent extends Model {
             foreach ($ruleset as &$rule) {
               if (strpos($rule, 'unique:') === 0) {
                 // Stop splitting at 4 so final param will hold optional where clause
-                $params = explode(',', $rule, 4); 
+                $params = explode(',', $rule, 4);
 
                 $uniqueRules = array();
-                
+
                 // Append table name if needed
                 $table = explode(':', $params[0]);
                 if (count($table) == 1)
                   $uniqueRules[1] = $this->getTable();
                 else
                   $uniqueRules[1] = $table[1];
-               
+
                 // Append field name if needed
                 if (count($params) == 1)
                   $uniqueRules[2] = $field;
@@ -845,20 +846,20 @@ abstract class Ardent extends Model {
 
                 if (isset($this->primaryKey)) {
                   $uniqueRules[3] = $this->{$this->primaryKey};
-                  
+
                   // If optional where rules are passed, append them otherwise use primary key
                   $uniqueRules[4] = isset($params[3]) ? $params[3] : $this->primaryKey;
                 }
                 else {
                   $uniqueRules[3] = $this->id;
                 }
-       
-                $rule = 'unique:' . implode(',', $uniqueRules);  
+
+                $rule = 'unique:' . implode(',', $uniqueRules);
               } // end if strpos unique
-              
+
             } // end foreach ruleset
         }
-        
+
         return $rules;
     }
 
@@ -880,22 +881,22 @@ abstract class Ardent extends Model {
         Closure $afterSave = null
     ) {
         $rules = $this->buildUniqueExclusionRules($rules);
-        
+
         return $this->save($rules, $customMessages, $options, $beforeSave, $afterSave);
     }
 
-	/**
-	 * Validates a model with unique rules properly treated.
-	 *
-	 * @param array $rules Validation rules
-	 * @param array $customMessages Custom error messages
-	 * @return bool
-	 * @see Ardent::validate()
-	 */
-	public function validateUniques(array $rules = array(), array $customMessages = array()) {
-		$rules = $this->buildUniqueExclusionRules($rules);
-		return $this->validate($rules, $customMessages);
-	}
+    /**
+     * Validates a model with unique rules properly treated.
+     *
+     * @param array $rules Validation rules
+     * @param array $customMessages Custom error messages
+     * @return bool
+     * @see Ardent::validate()
+     */
+    public function validateUniques(array $rules = array(), array $customMessages = array()) {
+        $rules = $this->buildUniqueExclusionRules($rules);
+        return $this->validate($rules, $customMessages);
+    }
 
     /**
      * Find a model by its primary key.
@@ -915,24 +916,24 @@ abstract class Ardent extends Model {
         }
     }
 
-	/**
-	 * Get a new query builder for the model's table.
-	 * Overriden from {@link \Model\Eloquent} to allow for usage of {@link throwOnFind}.
-	 *
-	 * @param  bool  $excludeDeleted
-	 * @return \Illuminate\Database\Eloquent\Builder
-	 */
-	public function newQuery($excludeDeleted = true) {
-		$builder = new Builder($this->newBaseQueryBuilder());
-		$builder->throwOnFind = static::$throwOnFind;
+    /**
+     * Get a new query builder for the model's table.
+     * Overriden from {@link \Model\Eloquent} to allow for usage of {@link throwOnFind}.
+     *
+     * @param  bool  $excludeDeleted
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function newQuery($excludeDeleted = true) {
+        $builder = new Builder($this->newBaseQueryBuilder());
+        $builder->throwOnFind = static::$throwOnFind;
 
-		// Once we have the query builders, we will set the model instances so the
-		// builder can easily access any information it may need from the model
-		// while it is constructing and executing various queries against it.
-		$builder->setModel($this)->with($this->with);
+        // Once we have the query builders, we will set the model instances so the
+        // builder can easily access any information it may need from the model
+        // while it is constructing and executing various queries against it.
+        $builder->setModel($this)->with($this->with);
 
-		return $this->applyGlobalScopes($builder);
-	}
+        return $this->applyGlobalScopes($builder);
+    }
 
     /**
      * Returns the validator object created after {@link validate()}.
