@@ -951,73 +951,40 @@ abstract class Ardent extends Model {
      * @param  array  $attributes
      * @return bool   t/f for success/failure
      */
-    public static function replace(array $attributes = [])
+    public static function insertIgnore(array $attributes)
     {
-        return static::executeQuery('replace', $attributes);
-    }
-    
-    public function insertIgnore(array $attributes)
-    {
-        $this->fill($attributes);
-    
-        if ($this->usesTimestamps()) {
-            $this->updateTimestamps();
-        }
-    
-        $attributes = $this->getAttributes();
-    
-        $query = $this->newBaseQueryBuilder();
-        $processor = $query->getProcessor();
-        $grammar = $query->getGrammar();
-    
-        $table = $grammar->wrapTable($this->getTable());
-        $keyName = $this->getKeyName();
-        $columns = $grammar->columnize(array_keys($attributes));
-        $values = $grammar->parameterize($attributes);
-    
-        $sql = "insert ignore into {$table} ({$columns}) values ({$values})";
-    
-        $id = $processor->processInsertGetId($query, $sql, array_values($attributes));
-    
-        $this->setAttribute($keyName, $id);
-    
-        return $this;
-    }
-    
-    protected static function executeQuery($command, array $attributes)
-    {
-        if(!count($attributes)) {
-            return true;
-        }
-        $model = new static();
-        if ($model->fireModelEvent('saving') === false) {
-            return false;
-        }
-        $attributes = collect($attributes);
-        $first = $attributes->first();
-        if(!is_array($first)) {
-            $attributes = collect([$attributes->toArray()]);
-        }
-        $keys = collect($attributes->first())->keys()
-            ->transform(function($key) {
-                return "`".$key."`";
-            });
-        $bindings = [];
-        $query = $command . " into ".$model->getTable()." (".$keys->implode(",").") values ";
-        $inserts = [];
-        foreach($attributes as $data) {
-            $qs = [];
-            foreach($data as $value) {
-                $qs[] = '?';
-                $bindings[] = $value;
-            }
-            $inserts[] = '('.implode(",",$qs).')';
-        }
-        $query .= implode(",",$inserts);
-        \DB::connection($model->getConnectionName())->insert($query, $bindings);
-        $model->fireModelEvent('saved', false);
-    }
+        $result = true;
 
+        try {
+             $model = new static();
+
+            $model->fill($attributes);
+
+            if ($model->usesTimestamps()) {
+                $model->updateTimestamps();
+            }
+
+            $attributes = $model->getAttributes();
+
+            $query = $model->newBaseQueryBuilder();
+            $processor = $query->getProcessor();
+            $grammar = $query->getGrammar();
+
+            $table = $grammar->wrapTable($model->getTable());
+            $keyName = $model->getKeyName();
+            $columns = $grammar->columnize(array_keys($attributes));
+            $values = $grammar->parameterize($attributes);
+
+            $sql = "insert ignore into {$table} ({$columns}) values ({$values})";
+
+            $id = $processor->processInsertGetId($query, $sql, array_values($attributes));
+
+        } catch (Exception $e) {
+             $result = false;
+        }
+
+        return $result;
+    }
     # replace model end
 
 
